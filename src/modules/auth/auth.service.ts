@@ -73,8 +73,14 @@ export class AuthService {
     const payload = { sub: userId, email };
     const refreshId = randomBytes(16).toString('hex');
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { expiresIn: '15m' }),
-      this.jwtService.signAsync({ ...payload, refreshId }, { expiresIn: '7d' }),
+      this.jwtService.signAsync(payload, {
+        secret: process.env.JWT_SECRET,
+        expiresIn: '15m',
+      }),
+      this.jwtService.signAsync(
+        { ...payload, refreshId },
+        { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' },
+      ),
     ]);
     return { accessToken, refreshToken };
   }
@@ -84,14 +90,19 @@ export class AuthService {
     userId: string,
     refreshToken: string,
   ): Promise<void> {
+    const hashedRefreshToken = await bcrypt.hash(
+      refreshToken,
+      this.SALT_ROUNDS,
+    );
     await this.prisma.user.update({
       where: { id: userId },
-      data: { refreshToken },
+      data: { refreshToken: hashedRefreshToken },
     });
   }
 
   // refresh access token
   async refreshTokens(userId: string): Promise<AuthResponseDto> {
+    console.log('refreshing tokens for userId: ', userId);
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -132,7 +143,7 @@ export class AuthService {
       where: { email },
     });
 
-    if (!user || (await bcrypt.compare(password, user.password))) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('invalid email or password');
     }
 

@@ -33,7 +33,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
       throw new UnauthorizedException('refresh token not provided');
     }
 
-    const refreshToken = authHeader.replace('Bearer', '').trim();
+    const refreshToken = authHeader.split(' ')[1];
     if (!refreshToken) {
       throw new UnauthorizedException(
         'Refresh token is empty after extraction',

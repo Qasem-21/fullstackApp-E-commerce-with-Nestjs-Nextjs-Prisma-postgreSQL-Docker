@@ -70,6 +70,7 @@ export class AuthController {
     description: 'too many requests. Rate limit exceeded',
   })
   async refresh(@GetUser('id') userId: string): Promise<AuthResponseDto> {
+    console.log('in the refresh', userId);
     return await this.authService.refreshTokens(userId);
   }
 
@@ -80,7 +81,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'logout user',
-    description: 'Logs out the user and invalidates the refresh token',
+    description: '  Logs out the user and invalidates the refresh token',
   })
   @ApiResponse({
     status: 200,
