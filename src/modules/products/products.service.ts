@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -145,6 +146,31 @@ export class ProductsService {
     });
 
     return this.formatProduct(updateProduct);
+  }
+
+  async updateStock(id: string, quantity: number): Promise<ProductResponseDto> {
+    const existingProduct = await this.prisma.product.findUnique({
+      where: { id },
+    });
+    if (!existingProduct) {
+      throw new NotFoundException('product not found with this ID');
+    }
+
+    const newStock = existingProduct.stock + quantity;
+
+    if (newStock < 0) {
+      throw new BadRequestException('Insufficient stock');
+    }
+
+    const updatedProduct = await this.prisma.product.update({
+      where: { id },
+      data: { stock: newStock },
+      include: {
+        category: true,
+      },
+    });
+
+    return this.formatProduct(updatedProduct);
   }
 
   private formatProduct(
