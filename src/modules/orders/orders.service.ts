@@ -11,6 +11,7 @@ import {
 } from './dto/order-response.dto';
 import { Order, OrderItem, orderStatus, Product, User } from '@prisma/client';
 import { QueryOrderDto } from './dto/query-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -218,6 +219,37 @@ export class OrdersService {
     return this.wrap(order);
   }
 
+  async update(
+    id: string,
+    updateOrderDto: UpdateOrderDto,
+    userId?: string,
+  ): Promise<OrderApiResponseDto<OrderResponseDto>> {
+    const where: any = { id };
+    if (userId) where.userId = userId;
+
+    const existingOrder = await this.prisma.order.findFirst({
+      where,
+    });
+
+    if (!existingOrder) {
+      throw new NotFoundException('order not found');
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: updateOrderDto,
+      include: {
+        orderItems: {
+          include: {
+            product: true,
+          },
+        },
+        user: true,
+      },
+    });
+
+    return this.wrap(updated);
+  }
   private wrap(
     order: Order & {
       orderItems: (OrderItem & { product: Product })[];
