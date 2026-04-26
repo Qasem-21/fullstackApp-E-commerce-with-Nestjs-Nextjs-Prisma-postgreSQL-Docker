@@ -165,6 +165,27 @@ export class OrdersController {
     description: 'admin access required',
   })
   async findOneAdmin(@Param('id') id: string) {
-    return await this.ordersService.findOneAdmin(id);
+    return await this.ordersService.findOne(id);
+  }
+
+  // USER: get own order by id
+  @Get('id')
+  @RelaxedThrottle()
+  @ApiOperation({
+    summary: 'get an order by ID for current user',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'order ID',
+  })
+  @ApiOkResponse({
+    description: 'order detail',
+    type: OrderApiResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'order not found',
+  })
+  async findOne(@Param('id') id: string, @GetUser('id') userId: string) {
+    return await this.ordersService.findOne(id, userId);
   }
 }

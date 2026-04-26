@@ -191,7 +191,7 @@ export class OrdersService {
     };
   }
 
-  async findOneAdmin(
+  async findOne(
     id: string,
     userId?: string,
   ): Promise<OrderApiResponseDto<OrderResponseDto>> {
