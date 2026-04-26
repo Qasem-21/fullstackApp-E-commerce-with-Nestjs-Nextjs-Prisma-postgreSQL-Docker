@@ -191,6 +191,33 @@ export class OrdersService {
     };
   }
 
+  async findOneAdmin(
+    id: string,
+    userId?: string,
+  ): Promise<OrderApiResponseDto<OrderResponseDto>> {
+    const where: any = { id };
+
+    if (userId) where.userId = userId;
+
+    const order = await this.prisma.order.findFirst({
+      where,
+      include: {
+        orderItems: {
+          include: {
+            product: true,
+          },
+        },
+        user: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`order with ID ${id} not found`);
+    }
+
+    return this.wrap(order);
+  }
+
   private wrap(
     order: Order & {
       orderItems: (OrderItem & { product: Product })[];
